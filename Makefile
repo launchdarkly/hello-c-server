@@ -4,7 +4,7 @@ CC = gcc
 CFLAGS = -g -Wall -I$(C_CLIENT_PATH)/include
 LFLAGS = $(C_CLIENT_PATH)/build/libsdk.a -lcurl -lpthread -lm -lgmp -lpcre
 
-TARGET = main
+TARGET = hello
 
 all: $(TARGET)
 
