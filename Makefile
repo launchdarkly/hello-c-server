@@ -22,4 +22,4 @@ $(C_CLIENT_PATH)/build/libsdk.a: $(C_CLIENT_PATH)
 		make
 
 $(C_CLIENT_PATH):
-	dgit clone $(C_CLIENT_REPO) $(C_CLIENT_PATH)
+	git clone $(C_CLIENT_REPO) $(C_CLIENT_PATH)
