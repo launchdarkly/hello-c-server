@@ -11,7 +11,7 @@ all: $(TARGET)
 clean:
 	rm -rf $(TARGET) $(C_CLIENT_PATH)
 
-$(TARGET): $(TARGET).c $(C_CLIENT_PATH)/build/libsdk.a
+$(TARGET): $(TARGET).c $(C_CLIENT_PATH)/build/libldserverapi.a
 	$(CC) $(CFLAGS) -o $(TARGET) $(TARGET).c $(LFLAGS)
 
 $(C_CLIENT_PATH)/build/libsdk.a: $(C_CLIENT_PATH)
