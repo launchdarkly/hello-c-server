@@ -3,7 +3,7 @@
 #include <unistd.h>
 #include <assert.h>
 
-#include "ldapi.h"
+#include "launchdarkly/api.h"
 
 #define YOUR_SDK_KEY "<put your SDK key here>"
 #define YOUR_FEATURE_KEY "<put your feature key here>"
