@@ -23,23 +23,18 @@ main()
     config = LDConfigNew(YOUR_SDK_KEY);
     assert(config);
 
-    client = LDClientInit(config, 0);
+    client = LDClientInit(config, 5000);
     assert(client);
 
     user = LDUserNew("abc");
     assert(user);
 
-    while (true) {
-        const bool flag = LDBoolVariation(
-            client, user, YOUR_FEATURE_KEY, false, NULL);
+    const bool flag = LDBoolVariation(client, user, YOUR_FEATURE_KEY, false, NULL);
 
-        if (flag) {
-            LD_LOG(LD_LOG_INFO, "feature flag is true");
-        } else {
-            LD_LOG(LD_LOG_INFO, "feature flag is false");
-        }
-
-        sleep(1);
+    if (flag) {
+        LD_LOG(LD_LOG_INFO, "feature flag is true");
+    } else {
+        LD_LOG(LD_LOG_INFO, "feature flag is false");
     }
 
     return 0;
