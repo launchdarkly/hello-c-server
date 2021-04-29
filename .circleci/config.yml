@@ -40,7 +40,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install curl
+          name: Install curl and PCRE
           command: apt-get -y update && apt-get install -y curl libpcre3
       - run:
           name: Fetch SDK
