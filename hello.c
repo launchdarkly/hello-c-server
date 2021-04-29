@@ -1,46 +1,58 @@
 #include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <assert.h>
+#include <string.h>
 
-#include "launchdarkly/api.h"
+#include <launchdarkly/api.h>
 
-#define YOUR_SDK_KEY "<put your SDK key here>"
-#define YOUR_FEATURE_KEY "<put your feature key here>"
+// Set SDK_KEY to your LaunchDarkly SDK key.
+#define MOBILE_KEY ""
 
-int
-main()
-{
+// Set FEATURE_FLAG_KEY to the feature flag key you want to evaluate.
+#define FEATURE_FLAG_KEY "my-boolean-flag"
+
+#define INIT_TIMEOUT_MILLISECONDS 3000
+
+int main() {    
+    if (!strlen(MOBILE_KEY)) {
+        printf("*** Please edit hello.c to set MOBILE_KEY to your LaunchDarkly mobile key first\n\n");
+        return 1;
+    }
+
     struct LDConfig *config;
     struct LDClient *client;
     struct LDUser *user;
 
-    setbuf(stdout, NULL);
+    LDConfigureGlobalLogger(LD_LOG_INFO, LDBasicLogger);
 
-    LDConfigureGlobalLogger(LD_LOG_TRACE, LDBasicLogger);
-    LDGlobalInit();
+    config = LDConfigNew(MOBILE_KEY);
 
-    config = LDConfigNew(YOUR_SDK_KEY);
-    assert(config);
+    // Set up the user properties. This user should appear on your LaunchDarkly users dashboard
+    // soon after you run the demo.
+    user = LDUserNew("example-user-key");
+    LDUserSetName(user, "Sandy");
 
-    client = LDClientInit(config, 0);
-    assert(client);
+    client = LDClientInit(config, INIT_TIMEOUT_MILLISECONDS);
 
-    user = LDUserNew("abc");
-    assert(user);
-
-    while (true) {
-        const bool flag = LDBoolVariation(
-            client, user, YOUR_FEATURE_KEY, false, NULL);
-
-        if (flag) {
-            LD_LOG(LD_LOG_INFO, "feature flag is true");
-        } else {
-            LD_LOG(LD_LOG_INFO, "feature flag is false");
-        }
-
-        sleep(1);
+    if (LDClientIsInitialized(client)) {
+        printf("*** SDK successfully initialized!\n\n");
+    } else {
+        printf("*** SDK failed to initialize\n\n");
+        return 1;
     }
+
+    LDBoolean flag_value = LDBoolVariation(client, user, FEATURE_FLAG_KEY, false);
+
+    printf("*** Feature flag '%s' is %s for this user\n\n",
+        FEATURE_FLAG_KEY, flag_value ? "true" : "false");
+
+    // After we are done with a user object we must free it.
+    LDUserFree(user);
+
+    // Here we ensure that the SDK shuts down cleanly and has a chance to deliver analytics
+    // events to LaunchDarkly before the program exits. If analytics events are not delivered,
+    // the user properties and flag usage statistics will not appear on your dashboard. In a
+    // normal long-running application, the SDK would continue running and events would be
+    // delivered automatically in the background.
+    LDClientClose(client);
 
     return 0;
 }

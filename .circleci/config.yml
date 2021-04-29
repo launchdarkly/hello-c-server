@@ -1,0 +1,124 @@
+version: 2.1
+
+orbs:
+   win: circleci/windows@1.0.0
+
+workflows:
+  version: 2
+  build_all:
+    jobs:
+      - build-test-linux:
+          context: hello-world-demos
+      - build-test-osx:
+          context: hello-world-demos
+      - build-test-windows:
+          context: hello-world-demos
+
+  test-daily:
+    triggers:
+    - schedule:
+        cron: "0 6 * * *"
+        filters:
+          branches:
+            only: master
+    jobs:
+    - build-test-linux:
+        context: hello-world-demos
+    - build-test-osx:
+        context: hello-world-demos
+    - build-test-windows:
+        context: hello-world-demos
+
+# This CI build ensures that the demo both compiles and works correctly. For the runtime test,
+# we use an SDK key and flag key that are passed in via the CircleCI context; the flag is
+# configured to return a true value.
+
+jobs:
+  build-test-linux:
+    docker:
+      - image: ldcircleci/ld-c-sdk-ubuntu  # defined in sdks-ci-docker project
+    steps:
+      - checkout
+      - run:
+          name: Install curl
+          command: apt-get -y update && apt-get install -y curl
+      - run:
+          name: Fetch SDK
+          command: ./fetch-linux.sh
+      - &step_update_keys_linux
+        run:
+          name: Insert mode key and flag key into demo code
+          command: |
+            sed -i.bak "s/#define SDK_KEY *\".*\"/#define SDK_KEY \"${LD_HELLO_WORLD_SDK_KEY}\"/" hello.c
+            sed -i.bak "s/#define FEATURE_FLAG_KEY *\".*\"/#define FEATURE_FLAG_KEY \"${LD_HELLO_WORLD_FLAG_KEY_WITH_TRUE_VALUE}\"/" hello.c
+      - run:
+          name: Build Hello
+          command: ./build-linux.sh
+      - &step_run_demo_linux
+        run:
+          name: Run Hello
+          command: |
+            ./hello | tee output.txt
+            grep "is true for this user" output.txt || (echo "Flag did not evaluate to expected true value" && exit 1)
+
+  build-test-osx:
+    macos:
+      xcode: "12.4.0"
+    steps:
+      - checkout
+      - run:
+          name: Fetch SDK
+          command: ./fetch-mac.sh
+      - *step_update_keys_linux
+      - run:
+          name: Build Hello
+          command: ./build-mac.sh
+      - *step_run_demo_linux
+
+  build-test-windows:
+    executor:
+      name: win/vs2019
+      shell: powershell.exe
+    steps:
+      - checkout
+      - run:
+          name: Fetch SDK
+          command: .\fetch-windows.ps1
+      - run:
+          name: Insert mobile key and flag key into demo code
+          command: |
+            (get-content -path hello.c) `
+              -replace "#define SDK_KEY `"`"","#define SDK_KEY `"${env:LD_HELLO_WORLD_SDK_KEY}`"" `
+              -replace "#define FEATURE_FLAG_KEY `"my-boolean-flag`"","#define FEATURE_FLAG_KEY `"${env:LD_HELLO_WORLD_FLAG_KEY_WITH_TRUE_VALUE}`"" `
+              | set-content -path hello.c
+      - run:
+          name: Build Hello
+          command: |
+              $vcBaseDir = "C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\VC"
+              $env:Path += ";$vcBaseDir\Common7\Tools"
+              # Using vcvarsall.bat from PowerShell is not straightforward - see
+              # https://stackoverflow.com/questions/41399692/running-a-build-script-after-calling-vcvarsall-bat-from-powershell
+              # Invokes a Cmd.exe shell script and updates the environment.
+              function Invoke-CmdScript {
+                  param(
+                    [String] $scriptName
+                  )
+                  $cmdLine = """$scriptName"" $args & set"
+                  & $Env:SystemRoot\system32\cmd.exe /c $cmdLine |
+                  select-string '^([^=]*)=(.*)$' | foreach-object {
+                    $varName = $_.Matches[0].Groups[1].Value
+                    $varValue = $_.Matches[0].Groups[2].Value
+                    set-item Env:$varName $varValue
+                  }
+              }
+              Invoke-CmdScript "$vcBaseDir\Auxiliary\Build\vcvarsall.bat" amd64
+              .\build-windows.ps1
+      - run:
+          name: Run Hello
+          command: |
+            .\hello | tee-object -variable output
+            if ( "$output" -notlike "*is true for this user*" )
+            {
+              write-output "Flag did not evaluate to expected true value"
+              exit 1
+            }
