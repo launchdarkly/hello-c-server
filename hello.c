@@ -5,7 +5,7 @@
 #include <launchdarkly/api.h>
 
 // Set SDK_KEY to your LaunchDarkly SDK key.
-#define MOBILE_KEY ""
+#define SDK_KEY ""
 
 // Set FEATURE_FLAG_KEY to the feature flag key you want to evaluate.
 #define FEATURE_FLAG_KEY "my-boolean-flag"
@@ -13,8 +13,8 @@
 #define INIT_TIMEOUT_MILLISECONDS 3000
 
 int main() {    
-    if (!strlen(MOBILE_KEY)) {
-        printf("*** Please edit hello.c to set MOBILE_KEY to your LaunchDarkly mobile key first\n\n");
+    if (!strlen(SDK_KEY)) {
+        printf("*** Please edit hello.c to set SDK_KEY to your LaunchDarkly SDK key first\n\n");
         return 1;
     }
 
@@ -24,7 +24,7 @@ int main() {
 
     LDConfigureGlobalLogger(LD_LOG_INFO, LDBasicLogger);
 
-    config = LDConfigNew(MOBILE_KEY);
+    config = LDConfigNew(SDK_KEY);
 
     // Set up the user properties. This user should appear on your LaunchDarkly users dashboard
     // soon after you run the demo.
