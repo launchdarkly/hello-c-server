@@ -26,11 +26,6 @@ int main() {
 
     config = LDConfigNew(SDK_KEY);
 
-    // Set up the user properties. This user should appear on your LaunchDarkly users dashboard
-    // soon after you run the demo.
-    user = LDUserNew("example-user-key");
-    LDUserSetName(user, "Sandy");
-
     client = LDClientInit(config, INIT_TIMEOUT_MILLISECONDS);
 
     if (LDClientIsInitialized(client)) {
@@ -39,6 +34,11 @@ int main() {
         printf("*** SDK failed to initialize\n\n");
         return 1;
     }
+
+		// Set up the user properties. This user should appear on your LaunchDarkly users dashboard
+		// soon after you run the demo.
+		user = LDUserNew("example-user-key");
+		LDUserSetName(user, "Sandy");
 
     LDBoolean flag_value = LDBoolVariation(client, user, FEATURE_FLAG_KEY, false, NULL);
 
