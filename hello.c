@@ -40,7 +40,7 @@ int main() {
         return 1;
     }
 
-    LDBoolean flag_value = LDBoolVariation(client, user, FEATURE_FLAG_KEY, false);
+    LDBoolean flag_value = LDBoolVariation(client, user, FEATURE_FLAG_KEY, false, NULL);
 
     printf("*** Feature flag '%s' is %s for this user\n\n",
         FEATURE_FLAG_KEY, flag_value ? "true" : "false");
