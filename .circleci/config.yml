@@ -72,6 +72,9 @@ jobs:
       - run:
           name: Fetch SDK
           command: ./fetch-mac.sh
+      - run:
+          name: Clang version
+          command: clang --version
       - *step_update_keys_linux
       - run:
           name: Build Hello
