@@ -58,7 +58,7 @@ jobs:
         run:
           name: Run Hello
           command: |
-            ./hello | tee output.txt
+            DYLD_FALLBACK_LIBRARY_PATH=./lib ./hello | tee output.txt
             grep "is true for this user" output.txt || (echo "Flag did not evaluate to expected true value" && exit 1)
 
   build-test-osx:
